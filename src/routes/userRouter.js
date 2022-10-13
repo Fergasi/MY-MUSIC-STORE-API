@@ -1,7 +1,9 @@
 const express = require("express");
 const UserModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+//function to clean/standardize user data before returning to frontend
 const cleanUser = (userDocument) => {
   return {
     id: userDocument._id,
@@ -13,7 +15,29 @@ const cleanUser = (userDocument) => {
   };
 };
 
+const getToken = (userId) => {
+  //create user token
+  return jwt.sign({ userId, iat: Date.now() }, process.env.AUTH_SECRET_KEY);
+};
+
 const userRouter = express.Router();
+
+userRouter.get("/sign-out", (req, res, next) => {
+  res.clearCookie("session_token");
+  res.send("Signed out successfully");
+});
+
+// userRouter.get("/test-auth", async (req, res, next) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(403).send("User not logged in");
+//     }
+
+//     res.status(200).send("User authenticated");
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 userRouter.post("/register-user", async (req, res, next) => {
   //grab data from the request body
@@ -32,6 +56,10 @@ userRouter.post("/register-user", async (req, res, next) => {
     });
 
     await userDocument.save();
+
+    const token = getToken(userDocument._id);
+
+    res.cookie("session_token", token, { httpOnly: true, secure: false }); //httpOnly: true - doesn't allow javascript code to access the cookie on the frontend // secure: false - should be true when https implemented and released to prod
 
     res.send({
       user: cleanUser(userDocument),
@@ -71,6 +99,10 @@ userRouter.post("/sign-in", async (req, res, next) => {
         .status(401)
         .json({ message: "User not found or incorrect credentials" });
     }
+
+    const token = getToken(foundUser._id);
+    //create session cookie
+    res.cookie("session_token", token, { httpOnly: true, secure: false }); //httpOnly: true - doesn't allow javascript code to access the cookie on the frontend // secure: false - should be true when https implemented and released to prod
 
     res.send({
       user: cleanUser(foundUser),
