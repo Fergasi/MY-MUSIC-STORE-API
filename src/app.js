@@ -7,6 +7,7 @@ const userRouter = require("./routes/userRouter");
 require("dotenv").config();
 const UserModel = require("./models/userModel");
 const jwt = require("jsonwebtoken");
+const productRouter = require("./routes/productRouter");
 
 const port = process.env.PORT;
 
@@ -76,7 +77,11 @@ const errorHandler = (error, req, res, next) => {
   }
 };
 
+//user routes
 app.use(userRouter);
+
+//product routes
+app.use(productRouter);
 
 app.use(errorHandler);
 

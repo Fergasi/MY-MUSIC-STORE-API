@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   hashedPassword: { type: String, required: true },
   profilePicture: { type: String },
   isAdmin: { type: Boolean, required: true, default: false },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "product" }],
 });
 
 const UserModel = mongoose.model("user", userSchema);
